@@ -4,19 +4,23 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
- 
+
+void sigint_handler(int sig) {
+    printf("\n invalid action! please enter your student ID");
+}
+
 int main()
 {
-    // We use two pipes
-    // First pipe to send input string from parent
-    // Second pipe to send concatenated string from child
+    // First pipe send input string from parent
+    // Second pipe store concatenated string from child
  
-    int fd1[2]; // Used to store two ends of first pipe
-    int fd2[2]; // Used to store two ends of second pipe
- 
-    char fixed_str[] = ".com.my";
+    int fd1[2]; // Used to store student ID
+    int fd2[2]; // Used to store student email
+    char fixed_str[] = {"@student.uitm.edu.my"};
     char input_str[100];
-    pid_t p;
+	pid_t p;
+    void sigint_handler(int sig);
+    
  
     if (pipe(fd1) == -1) {
         fprintf(stderr, "Pipe Failed");
@@ -26,8 +30,11 @@ int main()
         fprintf(stderr, "Pipe Failed");
         return 1;
     }
-    
-	printf("Please enter your website name: ");
+    if (signal(SIGINT, sigint_handler) == SIG_ERR){
+        perror("signal");
+        exit(1);
+    }
+	printf("Please enter your UiTM student ID: "); //prompt student to enter their student id
     scanf("%s", input_str);
     p = fork();
  
@@ -64,6 +71,7 @@ int main()
         // Concatenate a fixed string with it
         int k = strlen(concat_str);
         int i;
+		
         for (i = 0; i < strlen(fixed_str); i++)
             concat_str[k++] = fixed_str[i];
  
@@ -82,9 +90,10 @@ int main()
         // Read string from child, print it and close
         // reading end.
         read(fd2[0], concat_str, 100);
-        printf("Your generated website name is :\n %s\n", concat_str);
+        printf("Your generated UiTM studen email is : %s", concat_str);
         close(fd2[0]);
  
         exit(0);
     }
 }
+
